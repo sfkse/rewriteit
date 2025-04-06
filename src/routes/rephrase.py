@@ -22,6 +22,9 @@ async def rewrite(
         form_data = await request.form()
         text = form_data.get("text")
         user_id = form_data.get("user_id")
+        if not text:
+            logger.error("No text found in form data")
+            raise HTTPException(status_code=400, detail="Missing text")
         if not user_id:
             logger.error("No user_id found in form data")
             raise HTTPException(status_code=400, detail="Missing user_id")

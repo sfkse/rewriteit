@@ -24,7 +24,6 @@ Create a `.env` file in the root directory with the following variables:
 ```env
 SLACK_CLIENT_ID=your_slack_client_id
 SLACK_CLIENT_SECRET=your_slack_client_secret
-SLACK_SIGNING_SECRET=your_slack_signing_secret
 OPENROUTER_API_KEY=your_openrouter_api_key
 ```
 

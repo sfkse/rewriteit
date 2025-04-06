@@ -21,24 +21,14 @@ CMD ["sh", "-c", "\
         sleep 1; \
     done && \
     \
-    # Check existing tables \
-    echo 'Database is ready' && \
-    echo 'Listing existing tables...' && \
-    PGPASSWORD=postgres psql -h slackparaphrase-db -U postgres -d slackparaphrase -c '\\dt' && \
-    \
     # Apply migrations \
     echo 'Applying migrations...' && \
     yoyo apply --database postgresql://postgres:postgres@slackparaphrase-db:5432/slackparaphrase migrations && \
-    \
-    # Check tables after migrations \
-    echo 'Listing tables after migrations...' && \
-    PGPASSWORD=postgres psql -h slackparaphrase-db -U postgres -d slackparaphrase -c '\\dt' && \
     \
     # Start the application \
     echo 'Starting application...' && \
     uvicorn src.main:app \
         --host 0.0.0.0 \
         --port 8443 \
-        --reload \
         --ssl-keyfile ./certs/key.pem \
         --ssl-certfile ./certs/cert.pem"] 

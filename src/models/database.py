@@ -1,13 +1,15 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from datetime import datetime
 from src.database import Base
+from datetime import datetime
+import uuid
 
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    slack_user_id = Column(String, unique=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    slack_user_id = Column(String, unique=True, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     paraphrases = relationship("Paraphrase", back_populates="user")
@@ -15,11 +17,11 @@ class User(Base):
 class Paraphrase(Base):
     __tablename__ = "paraphrases"
 
-    id = Column(Integer, primary_key=True, index=True)
-    original_text = Column(Text)
-    paraphrased_text = Column(Text)
-    tone = Column(String, nullable=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    original_text = Column(Text, nullable=False)
+    paraphrased_text = Column(Text, nullable=False)
+    tone = Column(String)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     user = relationship("User", back_populates="paraphrases") 
