@@ -1,101 +1,127 @@
 # SlackParaphrase
 
-A Slack application that rephrases text using the OpenRouter API and ChatGPT.
+A Slack bot that helps rephrase messages using OpenRouter API. The bot can paraphrase text with different tones while maintaining the original meaning.
 
 ## Features
 
-- Rephrase text using the OpenRouter API and ChatGPT
-- Slack integration for easy access
-- Docker support for easy deployment
-- Code formatting with Black
+- OAuth-based Slack app installation
+- Message paraphrasing with customizable tones
+- PostgreSQL database for storing user data and paraphrase history
+- Secure handling of API keys and tokens
+- SSL support for secure communication
 
 ## Prerequisites
 
-- Python 3.8+
 - Docker and Docker Compose
-- Slack workspace
+- SSL certificates (for HTTPS)
+- Slack App credentials
 - OpenRouter API key
 
 ## Environment Variables
 
 Create a `.env` file in the root directory with the following variables:
 
-```bash
+```env
 SLACK_CLIENT_ID=your_slack_client_id
 SLACK_CLIENT_SECRET=your_slack_client_secret
+SLACK_SIGNING_SECRET=your_slack_signing_secret
 OPENROUTER_API_KEY=your_openrouter_api_key
 ```
-
-## Running the Application
-
-### Development Mode
-
-1. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-2. Run the application:
-
-```bash
-uvicorn src.main:app --reload
-```
-
-### Docker
-
-1. Build and run the application:
-
-```bash
-docker-compose up --build
-```
-
-## Code Formatting
-
-This project uses [Black](https://github.com/psf/black) for code formatting. To format the code:
-
-```bash
-black .
-```
-
-To install pre-commit hooks that will automatically format your code before each commit:
-
-```bash
-pre-commit install
-```
-
-## API Endpoints
-
-- `GET /health`: Health check endpoint
-- `POST /paraphrase`: Rephrase text using the OpenRouter API
-- `POST /rephrase`: Rephrase text for Slack integration
-- `GET /signin-oidc`: Handle Slack OAuth callback
 
 ## Project Structure
 
 ```
 slackparaphrase/
 ├── src/
-│   ├── __init__.py
-│   ├── main.py
-│   ├── config.py
 │   ├── models/
-│   │   ├── __init__.py
-│   │   ├── paraphrase.py
-│   │   ├── slack.py
-│   │   └── openrouter.py
-│   └── services/
-│       ├── __init__.py
-│       └── paraphrase.py
-├── docker-compose.yml
-├── Dockerfile
-├── requirements.txt
-├── pyproject.toml
-├── .pre-commit-config.yaml
-└── .env
+│   │   ├── database.py    # Database models
+│   │   ├── paraphrase.py  # Paraphrase-related models
+│   │   └── slack.py       # Slack-related models
+│   ├── routes/
+│   │   ├── oauth.py       # OAuth endpoint handlers
+│   │   └── rephrase.py    # Rephrase endpoint handlers
+│   ├── services/
+│   │   ├── database.py    # Database operations
+│   │   └── paraphrase.py  # Paraphrasing service
+│   ├── config.py          # Configuration settings
+│   ├── database.py        # Database connection
+│   └── main.py           # FastAPI application
+├── migrations/           # Database migrations
+├── certs/               # SSL certificates
+├── docker-compose.yml   # Docker services configuration
+├── Dockerfile          # Application container definition
+└── requirements.txt    # Python dependencies
 ```
+
+## Database Migrations
+
+The project uses Yoyo migrations for database schema management. Migrations are automatically applied when the application starts.
+
+Migration files are located in the `migrations/` directory:
+
+- `0001_initial.sql`: Creates users and paraphrases tables
+
+## Running the Application
+
+1. Generate SSL certificates and place them in the `certs/` directory:
+
+   ```bash
+   mkdir certs
+   openssl req -x509 -newkey rsa:4096 -nodes -out certs/cert.pem -keyout certs/key.pem -days 365
+   ```
+
+2. Start the application using Docker Compose:
+   ```bash
+   docker compose up --build
+   ```
+
+The application will be available at `https://localhost:8443`.
+
+## Development
+
+1. Install dependencies:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Run the application locally:
+   ```bash
+   uvicorn src.main:app --host 0.0.0.0 --port 8443 --ssl-keyfile ./certs/key.pem --ssl-certfile ./certs/cert.pem
+   ```
+
+## Database Management
+
+The application uses PostgreSQL for data storage. To connect to the database:
+
+```bash
+psql -h localhost -U postgres -d slackparaphrase
+```
+
+Default database configuration:
+
+- Host: localhost
+- Port: 5432
+- Database: slackparaphrase
+- Username: postgres
+- Password: postgres
+
+## Slack App Configuration
+
+1. Create a Slack App at https://api.slack.com/apps
+2. Configure OAuth & Permissions:
+   - Add redirect URL: `https://your-domain:8443/oauth`
+   - Required scopes:
+     - `chat:write`
+     - `chat:write.public`
+     - `commands`
+     - `channels:history`
+     - `groups:history`
+     - `mpim:history`
+     - `im:history`
+3. Install the app to your workspace
 
 ## License
 
-MIT
+[MIT License](LICENSE)
 
