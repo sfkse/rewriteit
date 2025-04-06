@@ -1,0 +1,3 @@
+"""
+SlackParaphrase application package.
+""" 

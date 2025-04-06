@@ -1,0 +1,57 @@
+version: "3.11"
+
+services:
+  api:
+    container_name: slackparaphrase-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8443:8443"
+    volumes:
+      - .:/app
+      - ./certs:/app/certs
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SLACK_CLIENT_ID=${SLACK_CLIENT_ID}
+      - SLACK_CLIENT_SECRET=${SLACK_CLIENT_SECRET}
+      - SLACK_SIGNING_SECRET=${SLACK_SIGNING_SECRET}
+      - SLACK_API_BASE_URL=${SLACK_API_BASE_URL}
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - OPENROUTER_MODEL=${OPENROUTER_MODEL}
+      - OPENROUTER_BASE_URL=${OPENROUTER_BASE_URL}
+      - DATABASE_URL=${DATABASE_URL}
+      - API_BASE_URL=${API_BASE_URL}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-k", "-f", "https://localhost:8443/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      slackparaphrase-db:
+        condition: service_healthy
+
+  slackparaphrase-db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=slackparaphrase
+    ports:
+      - "5432:5432"
+    volumes:
+      - slackparaphrase_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d slackparaphrase"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  slackparaphrase_db_data:
+

@@ -1,0 +1,11 @@
+fastapi==0.109.2
+uvicorn==0.27.1
+pydantic==2.6.1
+httpx==0.26.0
+pydantic-settings==2.1.0 
+python-dotenv==1.0.1
+python-multipart==0.0.16
+black==24.1.1
+sqlalchemy==2.0.25
+psycopg2-binary==2.9.9
+yoyo-migrations==8.2.0
