@@ -1,4 +1,4 @@
-def get_layout(text: str, paraphrased_text: str, user_id: str):
+def get_rephrase_result_layout(text: str, paraphrased_text: str, user_id: str):
     return {
         "response_type": "ephemeral",
         "user_id": user_id,

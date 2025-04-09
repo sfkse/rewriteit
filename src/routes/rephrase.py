@@ -4,7 +4,9 @@ from src.services.paraphrase import ParaphraseService
 from src.services.database import DatabaseService
 from src.database import get_db
 from src.utils.text import parse_command
-from src.utils.layout import get_layout, get_success_layout, get_modify_layout
+from src.utils.layout import get_rephrase_result_layout, get_modify_layout
+from src.utils.auth import verify_slack_request
+
 from src.config import settings
 import json
 import logging
@@ -16,8 +18,13 @@ logger = logging.getLogger(__name__)
 @router.post("/rewrite")
 async def rewrite(
     request: Request,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    is_verified: bool = Depends(verify_slack_request)
 ):
+    if not is_verified:
+        logger.error("Unauthorized request")
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
     try:
         form_data = await request.form()
         text = form_data.get("text")
@@ -66,31 +73,25 @@ async def rewrite(
         )
 
         # Send the delayed response to Slack with the paraphrased text
-        await send_delayed_response(response_url, text_to_rephrase, paraphrased_text, user_id)
+        return await send_delayed_response(response_url, text_to_rephrase, paraphrased_text, user_id)
 
-        return get_success_layout(text_to_rephrase, paraphrased_text, user_id)
+        # return get_success_layout(text_to_rephrase, paraphrased_text, user_id)
 
     except Exception as e:
         logger.error(f"Error processing rephrase request: {str(e)}")
         raise HTTPException(status_code=500, detail="Error processing request")
 
 
-async def send_delayed_response(response_url: str, original_text: str, paraphrased_text: str, user_id: str):
-    payload = get_layout(original_text, paraphrased_text, user_id)
-
-    async with httpx.AsyncClient() as client:
-        response = await client.post(response_url, json=payload)
-
-    # Check if the response was successful
-    if not response.is_success:
-        logger.error(f"Failed to send delayed response to Slack. Status: {response.status_code}, Content: {response.text}")
-
-
 @router.post("/rewrite-action")
 async def rewrite_action(
     payload: str = Form(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    is_verified: bool = Depends(verify_slack_request)
 ):
+    if not is_verified:
+        logger.error("Unauthorized request")
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    
     try:
         payload_data = json.loads(payload)
         user_id = payload_data["user"]["id"]
@@ -189,6 +190,17 @@ async def rewrite_action(
     except Exception as e:
         logger.error(f"Error processing rephrase action: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Error processing request") 
+
+
+async def send_delayed_response(response_url: str, original_text: str, paraphrased_text: str, user_id: str):
+    payload = get_rephrase_result_layout(original_text, paraphrased_text, user_id)
+
+    async with httpx.AsyncClient() as client:
+        response = await client.post(response_url, json=payload)
+
+    # Check if the response was successful
+    if not response.is_success:
+        logger.error(f"Failed to send delayed response to Slack. Status: {response.status_code}, Content: {response.text}")
 
 def get_latest_paraphrase(latest_paraphrases):
     latest_paraphrase = latest_paraphrases[0]
