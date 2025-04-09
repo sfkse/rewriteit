@@ -58,35 +58,5 @@ class ParaphraseService:
                     
         except Exception as e:
             logger.error(f"Error during paraphrasing: {str(e)}")
-            return None 
-        
-    async def send_message(self, channel_id: str, text: str, response_url: str) -> Optional[str]:
-        try:
-            async with httpx.AsyncClient() as client:
-                headers = {
-                        "Authorization": f"Bearer {settings.slack_bot_token}",
-                        "Content-Type": "application/json"
-                    }
-                message_payload = {
-                    "channel": channel_id,
-                    "text": text
-                }
-                response = await client.post(
-                    f"{settings.slack_api_base_url}/chat.postMessage",
-                    headers=headers,
-                    json=message_payload
-                )
-                    
-                if not response.is_success:
-                    logger.error(f"Failed to send message to channel: {response.text}")
-                    raise HTTPException(status_code=500, detail="Failed to send message to channel")
-                
-                # Send a confirmation message back to the user
-                success_payload = {
-                    "response_type": "ephemeral",
-                    "text": "Your message has been sent to the channel!"
-                }
-                await client.post(response_url, json=success_payload)
-        except Exception as e:
-            logger.error(f"Error sending message: {str(e)}")
             return None
+

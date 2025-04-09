@@ -21,3 +21,9 @@ def parse_command(text: str) -> tuple[str, str | None]:
     if len(tone_words) > 1:
         actual_text = (before_tone + " " + " ".join(tone_words[1:])).strip()
     return actual_text, tone
+
+def get_latest_paraphrase(latest_paraphrases):
+    latest_paraphrase = latest_paraphrases[0]
+    original_text = latest_paraphrase.original_text
+    paraphrased_text = latest_paraphrase.paraphrased_text
+    return original_text, paraphrased_text

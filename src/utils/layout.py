@@ -1,7 +1,6 @@
 def get_rephrase_result_layout(text: str, paraphrased_text: str, user_id: str):
     return {
         "response_type": "ephemeral",
-        "user_id": user_id,
         "blocks": [
             {   
                 "type": "section",
@@ -32,18 +31,9 @@ def get_rephrase_result_layout(text: str, paraphrased_text: str, user_id: str):
                         "type": "button",
                         "text": {
                             "type": "plain_text",
-                            "text": "Modify"
+                            "text": "Copy"
                         },
-                        "action_id": "modify_button"
-                    },
-                    {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Send"
-                        },
-                        "action_id": "send_button",
-                        "style": "primary"
+                        "action_id": "copy_button"
                     }
                 ]
             }
@@ -53,8 +43,7 @@ def get_rephrase_result_layout(text: str, paraphrased_text: str, user_id: str):
 def get_success_layout(text: str, paraphrased_text: str, user_id: str):
     return {
         "response_type": "ephemeral",
-        "user_id": user_id,
-        "text": "Your text has been rephrased!"
+        "text": "Text paraphrased successfully!"
     }
 
 def get_modify_layout(text: str, user_id: str):
@@ -107,4 +96,10 @@ def get_modify_layout(text: str, user_id: str):
                 ]
             }
         ]
+    }
+
+def get_error_layout(error: str):   
+    return {
+        "response_type": "ephemeral",
+        "text": f"Error: {error}"
     }
