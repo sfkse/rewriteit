@@ -6,11 +6,11 @@ from sqlalchemy.orm import Session
 
 from src.services.paraphrase import ParaphraseService
 from src.services.database import DatabaseService
-from src.database import get_db
+from src.services.slack import SlackService
 from src.utils.text import parse_command, get_latest_paraphrase
-from src.utils.layout import get_rephrase_result_layout, get_success_layout, get_error_layout
+from src.utils.layout import get_rephrase_result_layout, get_success_layout, get_error_layout, get_acknowledgment_layout
 from src.utils.auth import verify_slack_request
-
+from src.database import get_db     
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -27,7 +27,6 @@ async def rewrite(
     
     try:
         form_data = await request.form()
-        logger.info(f"Form data: {form_data}")
         text = form_data.get("text")
         user_id = form_data.get("user_id")
 
@@ -48,18 +47,14 @@ async def rewrite(
             return get_error_layout("Missing response_url")
 
         # Send immediate acknowledgment
-        async with httpx.AsyncClient() as client:
-            ack_payload = {
-                "response_type": "ephemeral",
-                "text": "Rewriting your text, please wait..."
-            }
-            await client.post(response_url, json=ack_payload)
-            logger.info("Sent acknowledgment response")
+        slack_service = SlackService()
+        acknowledgment_layout = get_acknowledgment_layout(user_id)
+        await slack_service.send_action_response(response_url, acknowledgment_layout)
+        logger.info("Sent acknowledgment response")
 
         # Asynchronously process the rephrase
         paraphrase_service = ParaphraseService()
         paraphrased_text = await paraphrase_service.paraphrase(text_to_rephrase, tone)
-
         if not paraphrased_text:
             logger.error(f"Failed to get paraphrased text from service for user {user_id}")
             return get_error_layout("Failed to paraphrase text")
@@ -75,11 +70,9 @@ async def rewrite(
         )
 
         # Send the result to Slack
-        async with httpx.AsyncClient() as client:
-            result_payload = get_rephrase_result_layout(text_to_rephrase, paraphrased_text, user_id)
-            await client.post(response_url, json=result_payload)
+        await slack_service.send_action_response(response_url, get_rephrase_result_layout(text_to_rephrase, paraphrased_text, user_id))
 
-        return get_success_layout(text_to_rephrase, paraphrased_text, user_id)
+        return get_success_layout()
 
     except Exception as e:
         logger.error(f"Error processing rephrase request: {str(e)}")
@@ -109,12 +102,9 @@ async def rewrite_action(
         action_id = payload_data["actions"][0]["action_id"]
     
         # Send immediate acknowledgment
-        async with httpx.AsyncClient() as client:
-            ack_payload = {
-                "response_type": "ephemeral",
-                "text": "Processing your request..."
-            }
-            await client.post(response_url, json=ack_payload)
+        slack_service = SlackService()
+        acknowledgment_layout = get_acknowledgment_layout(user_id)
+        await slack_service.send_action_response(response_url, acknowledgment_layout)
 
         # Get or create user and fetch their latest paraphrase
         db_service = DatabaseService(db)
@@ -147,9 +137,7 @@ async def rewrite_action(
             )
             
             # Send the result to Slack
-            async with httpx.AsyncClient() as client:
-                result_payload = get_rephrase_result_layout(original_text, new_paraphrased_text, user_id)
-                await client.post(response_url, json=result_payload)
+            await slack_service.send_action_response(response_url, get_rephrase_result_layout(original_text, new_paraphrased_text, user_id))
             
             return {}
 

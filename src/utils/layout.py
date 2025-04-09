@@ -40,7 +40,7 @@ def get_rephrase_result_layout(text: str, paraphrased_text: str, user_id: str):
         ]
     }
 
-def get_success_layout(text: str, paraphrased_text: str, user_id: str):
+def get_success_layout():
     return {
         "response_type": "ephemeral",
         "text": "Text paraphrased successfully!"
@@ -102,4 +102,11 @@ def get_error_layout(error: str):
     return {
         "response_type": "ephemeral",
         "text": f"Error: {error}"
+    }
+
+def get_acknowledgment_layout(user_id: str):
+    return {
+        "response_type": "ephemeral",
+        "user_id": user_id,
+        "text": "Rewriting your text, please wait..."
     }
