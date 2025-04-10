@@ -23,7 +23,7 @@ CMD ["sh", "-c", "\
     \
     # Apply migrations \
     echo 'Applying migrations...' && \
-    yoyo apply --database postgresql://postgres:postgres@slackparaphrase-db:5432/slackparaphrase migrations && \
+    yoyo apply --database postgresql://postgres:postgres@slackparaphrase-db:5433/slackparaphrase migrations && \
     \
     # Start the application \
     echo 'Starting application...' && \
