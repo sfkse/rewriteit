@@ -29,6 +29,6 @@ CMD ["sh", "-c", "\
     echo 'Starting application...' && \
     uvicorn src.main:app \
         --host 0.0.0.0 \
-        --port 8443 \
+        --port 8084 \
         --ssl-keyfile ./certs/key.pem \
         --ssl-certfile ./certs/cert.pem"] 
