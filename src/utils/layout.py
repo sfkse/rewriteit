@@ -1,6 +1,7 @@
-def get_rephrase_result_layout(text: str, paraphrased_text: str, user_id: str):
+def get_rephrase_response_layout(text: str, paraphrased_text: str, user_id: str):
     return {
         "response_type": "ephemeral",
+        "user_id": user_id,
         "blocks": [
             {   
                 "type": "section",
@@ -15,6 +16,23 @@ def get_rephrase_result_layout(text: str, paraphrased_text: str, user_id: str):
                     "type": "mrkdwn",
                     "text": "*Improved Text:*\n" + paraphrased_text
                 },
+            },
+            {
+                "type": "input",
+                "block_id": "tone_input_block",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "tone_input",
+                    "placeholder": {
+                        "type": "plain_text",
+                        "text": "e.g., formal, casual, professional"
+                    }
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "Optional: Specify tone for rewrite"
+                },
+                "optional": True
             },
             {
                 "type": "actions",
@@ -40,10 +58,10 @@ def get_rephrase_result_layout(text: str, paraphrased_text: str, user_id: str):
         ]
     }
 
-def get_success_layout():
+def get_processing_layout():
     return {
         "response_type": "ephemeral",
-        "text": "Text paraphrased successfully!"
+        "text": "Hold on, we're working on it..."
     }
 
 def get_modify_layout(text: str, user_id: str):
@@ -108,5 +126,5 @@ def get_acknowledgment_layout(user_id: str):
     return {
         "response_type": "ephemeral",
         "user_id": user_id,
-        "text": "Rewriting your text, please wait..."
+        "text": "We've received your request"
     }

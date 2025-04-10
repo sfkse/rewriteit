@@ -41,3 +41,20 @@ class DatabaseService:
             .limit(limit)
             .all()
         ) 
+    
+    def delete_user_paraphrases(self, user_id: int):
+        user = self.get_or_create_user(user_id)
+        # Get the IDs of paraphrases to keep (latest 10)
+        keep_ids = (
+            self.db.query(Paraphrase.id)
+            .filter(Paraphrase.user_id == user.id)
+            .order_by(Paraphrase.created_at.desc())
+            .limit(10)
+            .subquery()
+        )
+        # Delete all paraphrases except the ones to keep
+        self.db.query(Paraphrase).filter(
+            Paraphrase.user_id == user.id,
+            ~Paraphrase.id.in_(keep_ids)
+        ).delete(synchronize_session=False)
+        self.db.commit()
