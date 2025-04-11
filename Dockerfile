@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y curl postgresql-client && rm -rf /var/l
 
 CMD ["sh", "-c", "\
     # Wait for database to be ready \
-    until PGPASSWORD=postgres psql -h slackparaphrase-db -U postgres -d slackparaphrase -c '\\q'; do \
+    until PGPASSWORD=postgres psql -h slackparaphrase-db -U postgres -d slackparaphrase -p 5433 -c '\\q'; do \
         echo 'Postgres is unavailable - sleeping'; \
         sleep 1; \
     done && \
