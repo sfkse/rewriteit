@@ -55,6 +55,6 @@ class DatabaseService:
         # Delete all paraphrases except the ones to keep
         self.db.query(Paraphrase).filter(
             Paraphrase.user_id == user.id,
-            ~Paraphrase.id.in_(keep_ids)
+            ~Paraphrase.id.in_(self.db.query(keep_ids))
         ).delete(synchronize_session=False)
         self.db.commit()
