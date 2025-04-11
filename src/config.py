@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     db_port: str 
     ssl_cert_path: str
     ssl_key_path: str 
+    use_ssl: bool
     
     class Config:       
         env_file = ".env"

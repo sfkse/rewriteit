@@ -25,10 +25,9 @@ CMD ["sh", "-c", "\
     echo 'Applying migrations...' && \
     yoyo apply --database postgresql://postgres:postgres@slackparaphrase-db:${DB_PORT}/slackparaphrase migrations && \
     \
-    # Start the application \
-    echo 'Starting application...' && \
-    uvicorn src.main:app \
-        --host 0.0.0.0 \
-        --port ${API_PORT} \
-        --ssl-keyfile ${SSL_KEY_PATH} \
-        --ssl-certfile ${SSL_CERT_PATH}"] 
+    # Start the server \
+    if [ \"$USE_SSL\" = \"true\" ]; then \
+        uvicorn src.main:app --host 0.0.0.0 --port ${API_PORT} --reload --ssl-keyfile ${SSL_KEY_PATH} --ssl-certfile ${SSL_CERT_PATH}; \
+    else \
+        uvicorn src.main:app --host 0.0.0.0 --port ${API_PORT}; \
+    fi"] 
