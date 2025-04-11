@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     database_url: str
     api_base_url: str
     slack_bot_token: str
+    api_port: str 
+    db_port: str 
+    ssl_cert_path: str
+    ssl_key_path: str 
     
     class Config:       
         env_file = ".env"

@@ -7,10 +7,11 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8084:8084"
+      - "${API_PORT}:${API_PORT}"
     volumes:
       - .:/app
-      - ./certs:/app/certs
+      - ${SSL_CERT_PATH}:/app/certs/cert.pem
+      - ${SSL_KEY_PATH}:/app/certs/key.pem
     env_file:
       - .env
     environment:
@@ -27,7 +28,7 @@ services:
       - API_BASE_URL=${API_BASE_URL}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-k", "-f", "https://localhost:8084/docs"]
+      test: ["CMD", "curl", "-k", "-f", "https://localhost:${API_PORT}/docs"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -43,12 +44,13 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=slackparaphrase
     ports:
-      - "5433:5433"
-    command: postgres -p 5433
+      - "${DB_PORT}:${DB_PORT}"
+    command: postgres -p ${DB_PORT}
     volumes:
       - slackparaphrase_db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d slackparaphrase -p 5433"]
+      test:
+        ["CMD-SHELL", "pg_isready -U postgres -d slackparaphrase -p ${DB_PORT}"]
       interval: 10s
       timeout: 5s
       retries: 5

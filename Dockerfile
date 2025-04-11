@@ -16,19 +16,19 @@ RUN apt-get update && apt-get install -y curl postgresql-client && rm -rf /var/l
 
 CMD ["sh", "-c", "\
     # Wait for database to be ready \
-    until PGPASSWORD=postgres psql -h slackparaphrase-db -U postgres -d slackparaphrase -p 5433 -c '\\q'; do \
+    until PGPASSWORD=postgres psql -h slackparaphrase-db -U postgres -d slackparaphrase -p ${DB_PORT} -c '\\q'; do \
         echo 'Postgres is unavailable - sleeping'; \
         sleep 1; \
     done && \
     \
     # Apply migrations \
     echo 'Applying migrations...' && \
-    yoyo apply --database postgresql://postgres:postgres@slackparaphrase-db:5433/slackparaphrase migrations && \
+    yoyo apply --database postgresql://postgres:postgres@slackparaphrase-db:${DB_PORT}/slackparaphrase migrations && \
     \
     # Start the application \
     echo 'Starting application...' && \
     uvicorn src.main:app \
         --host 0.0.0.0 \
-        --port 8084 \
-        --ssl-keyfile ./certs/key.pem \
-        --ssl-certfile ./certs/cert.pem"] 
+        --port ${API_PORT} \
+        --ssl-keyfile ${SSL_KEY_PATH} \
+        --ssl-certfile ${SSL_CERT_PATH}"] 
