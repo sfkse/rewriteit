@@ -108,10 +108,10 @@ def get_processing_layout():
 #         ]
 #     }
 
-def get_error_layout(error: str):   
+def get_error_layout(error: str, original_text: str):   
     return {
         "response_type": "ephemeral",
-        "text": f"Error: {error}"
+        "text": f"Error: {error}\n\nOriginal Text: {original_text}"
     }
 
 def get_acknowledgment_layout(user_id: str):

@@ -17,7 +17,6 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-
 @router.post("/reword")
 async def reword(
     request: Request,
@@ -49,9 +48,9 @@ async def reword(
         text_to_rephrase, tone = parse_command(text)
         
         # Send acknowledgment via response_url (Slack will already have received this)
-        payload = {"response_url": response_url, "user_id": user_id}
+        payload = get_acknowledgment_payload(user_id, response_url)
         await send_action_response(payload, "acknowledgment", slack_service)
-        logger.info(f"Sent acknowledgment to user {user_id}")
+        logger.info(f"Sent acknowledgment for user {user_id} for rewordit")
         
         # Add background task to do the actual work
         background_tasks.add_task(
@@ -65,11 +64,11 @@ async def reword(
         )
         
         # Return an immediate response (within 3 seconds) to Slack
-        logger.info(f"Added paraphrase task to background for user {user_id}")
+        logger.info(f"Added rewordit task to background for user {user_id}")
         return get_processing_layout()
         
     except Exception as e:
-        logger.error(f"Error processing rephrase request for user {user_id}: {str(e)}", exc_info=True)
+        logger.error(f"Error processing rewordit request for user {user_id}: {str(e)}", exc_info=True)
         return get_error_layout("Error processing request")
 
 @router.post("/reword-action")
@@ -98,9 +97,9 @@ async def reword_action(
         action_id = payload_data["actions"][0]["action_id"]
     
         # Send immediate acknowledgment
-        payload = {"response_url": response_url, "user_id": user_id}
+        payload = get_acknowledgment_payload(user_id, response_url)
         await send_action_response(payload, "acknowledgment", slack_service)
-        logger.info(f"Sent acknowledgment to user {user_id}")
+        logger.info(f"Sent acknowledgment for user {user_id} for rewordit-action")
         
         if action_id == "rewrite_button":
             logger.info("Received rewrite_button action")
@@ -140,11 +139,11 @@ async def reword_action(
             return {}
 
     except Exception as e:
-        logger.error(f"Error processing rephrase action: {str(e)}", exc_info=True)
+        logger.error(f"Error processing rewordit-action request for user {user_id}: {str(e)}", exc_info=True)
         return get_error_layout("Error processing request")
 
-@router.post("/rewordit-fix")
-async def rewordit_fix(
+@router.post("/reword-fix")
+async def reword_fix(
     request: Request,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
@@ -165,9 +164,9 @@ async def rewordit_fix(
             return get_error_layout("Missing user_id")
         
         # Send acknowledgment via response_url (Slack will already have received this)
-        payload = {"response_url": response_url, "user_id": user_id}
+        payload = get_acknowledgment_payload(user_id, response_url)
         await send_action_response(payload, "acknowledgment", slack_service)
-        logger.info(f"Sent acknowledgment to user {user_id}")
+        logger.info(f"Sent acknowledgment for user {user_id} for rewordit-fix")
         
         # Add background task to do the actual work
         background_tasks.add_task(
@@ -180,11 +179,11 @@ async def rewordit_fix(
         )
         
         # Return an immediate response (within 3 seconds) to Slack
-        logger.info(f"Added paraphrase task to background for user {user_id}")
+        logger.info(f"Added rewordit-fix task to background for user {user_id}")
         return get_processing_layout()
         
     except Exception as e:
-        logger.error(f"Error processing rephrase request for user {user_id}: {str(e)}", exc_info=True)
+        logger.error(f"Error processing rewordit-fix request for user {user_id}: {str(e)}", exc_info=True)
         return get_error_layout("Error processing request")
 
 # Background task function for processing paraphrasing
@@ -205,9 +204,9 @@ async def process_paraphrase_task(
         paraphrased_text = await paraphrase_service.paraphrase(text_to_rephrase, tone)
         
         if not paraphrased_text:
-            logger.error(f"Failed to get paraphrased text from service for user {user_id}")
-            # Send error response
-            await send_action_response(response_url, "error", slack_service)
+            logger.error(f"Failed to get rephrased text from service for user {user_id}")
+            payload = get_error_payload("Failed to get rephrased text", text_to_rephrase, response_url)
+            await send_action_response(payload, "error", slack_service)
             return
         
         # Store in the database
@@ -221,14 +220,13 @@ async def process_paraphrase_task(
         )
         
         # Send the result to Slack
-        payload = {"response_url": response_url, "original_text": text_to_rephrase, "new_paraphrased_text": paraphrased_text, "user_id": user_id}
+        payload = get_rephrase_response_payload(text_to_rephrase, paraphrased_text, user_id)
         await send_action_response(payload, "rephrased", slack_service)
         logger.info(f"Successfully processed paraphrase for user {user_id}")
     
     except Exception as e:
         logger.error(f"Error in background paraphrase task: {str(e)}", exc_info=True)
-        # Send error to user
-        payload = {"response_url": response_url, "error": str(e)}
+        payload = get_error_payload(str(e), text_to_rephrase, response_url)
         await send_action_response(payload, "error", slack_service)
 
 # Background task function for processing rewrite action
@@ -250,8 +248,7 @@ async def process_rewrite_action_task(
         
         if not new_paraphrased_text:
             logger.error(f"Failed to get paraphrased text for user {user_id}")
-            # Send error response
-            payload = {"response_url": response_url, "user_id": user_id}
+            payload = get_error_payload("Failed to get paraphrased text", original_text, response_url)
             await send_action_response(payload, "error", slack_service)
             return
         
@@ -266,14 +263,13 @@ async def process_rewrite_action_task(
         )
         
         # Send the result to Slack
-        payload = {"response_url": response_url, "original_text": original_text, "new_paraphrased_text": new_paraphrased_text, "user_id": user_id}
+        payload = get_rephrase_response_payload(original_text, new_paraphrased_text, user_id)
         await send_action_response(payload, "rephrased", slack_service)
         logger.info(f"Successfully processed rewrite action for user {user_id}")
     
     except Exception as e:
         logger.error(f"Error in background rewrite action task: {str(e)}", exc_info=True)
-        # Send error to user
-        payload = {"response_url": response_url, "error": str(e)}
+        payload = get_error_payload(str(e), original_text, response_url)
         await send_action_response(payload, "error", slack_service)
 
 async def process_rewordit_fix_task(
@@ -294,8 +290,7 @@ async def process_rewordit_fix_task(
         
         if not fixed_text:
             logger.error(f"Failed to get fixed text for user {user_id}")
-            # Send error response
-            payload = {"response_url": response_url, "error": "Failed to get fixed text"}
+            payload = get_error_payload("Failed to get fixed text", text, response_url)
             await send_action_response(payload, "error", slack_service)
     
         db_service = DatabaseService(db)
@@ -307,14 +302,14 @@ async def process_rewordit_fix_task(
         )
 
         # Send the result to Slack
-        payload = {"response_url": response_url, "original_text": text, "new_paraphrased_text": fixed_text, "user_id": user_id}
+        payload = get_rephrase_response_payload(text, fixed_text, user_id)
         await send_action_response(payload, "rephrased", slack_service)
         logger.info(f"Successfully processed rewordit fix for user {user_id}")
         
     except Exception as e:
         logger.error(f"Error in background rewordit fix task: {str(e)}", exc_info=True)
         # Send error to user
-        payload = {"response_url": response_url, "error": str(e)}
+        payload = get_error_payload(str(e), text, response_url)
         await send_action_response(payload, "error", slack_service)    
 
 async def send_action_response(payload: dict, type: str, slack_service: SlackService):
@@ -325,10 +320,19 @@ def get_action_response_layout(payload: dict, type: str):
     if type == "acknowledgment":
         return get_acknowledgment_layout(payload["user_id"])  
     elif type == "error":
-        return get_error_layout(payload["user_id"])
+        return get_error_layout(payload["error"], payload["original_text"])
     elif type == "processing":
         return get_processing_layout()
     elif type == "rephrased":
         return get_rephrase_response_layout(payload["original_text"], payload["new_paraphrased_text"], payload["user_id"])
     else:
         raise ValueError(f"Invalid action response type: {type}")
+    
+def get_error_payload(error: str, original_text: str, response_url: str):
+    return {"response_url": response_url, "error": error, "original_text": original_text}
+
+def get_acknowledgment_payload(user_id: str, response_url: str):
+    return {"response_url": response_url, "user_id": user_id}
+
+def get_rephrase_response_payload(original_text: str, paraphrased_text: str, user_id: str):
+    return {"original_text": original_text, "new_paraphrased_text": paraphrased_text, "user_id": user_id}
