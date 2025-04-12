@@ -29,11 +29,7 @@ async def reword(
         raise HTTPException(status_code=401, detail="Unauthorized")
     
     try:
-        # Get form data and validate essential fields
         text, user_id, user_name, response_url = await parse_request(request)
-        slack_service = SlackService()
-        
-        # Validate request data
         if not text:
             logger.error(f"No text found in form data for user {user_id}")
             return get_error_layout("Missing text")
@@ -44,9 +40,8 @@ async def reword(
             logger.error(f"No response_url found in form data for user {user_id}")
             return get_error_layout("Missing response_url")
             
-        # Parse the command to get text and tone
-        text_to_rephrase, tone = parse_command(text)
-        
+        slack_service = SlackService()
+        text_to_rephrase, tone = parse_command(text)     
         # Send acknowledgment via response_url (Slack will already have received this)
         payload = get_acknowledgment_payload(user_id, response_url)
         await send_action_response(payload, "acknowledgment", slack_service)
@@ -83,13 +78,13 @@ async def reword_action(
         return get_error_layout("Unauthorized")
     
     try:
-        slack_service = SlackService()
         form_data = await request.form()
         payload = form_data.get("payload")
         if not payload:
             logger.error("No payload found in form data")
             return get_error_layout("Missing payload")
             
+        slack_service = SlackService()
         payload_data = json.loads(payload)
         user_id = payload_data["user"]["id"]
         user_name = payload_data["user"]["name"]
@@ -154,7 +149,6 @@ async def reword_fix(
         return get_error_layout("Unauthorized")
     
     try:
-        slack_service = SlackService()
         text, user_id, user_name, response_url = await parse_request(request)
         if not text:
             logger.error(f"No text found in form data for user {user_id}")
@@ -163,6 +157,7 @@ async def reword_fix(
             logger.error(f"No user_id found in form data for user {user_id}")
             return get_error_layout("Missing user_id")
         
+        slack_service = SlackService()
         # Send acknowledgment via response_url (Slack will already have received this)
         payload = get_acknowledgment_payload(user_id, response_url)
         await send_action_response(payload, "acknowledgment", slack_service)
