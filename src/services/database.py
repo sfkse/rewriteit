@@ -6,29 +6,35 @@ class DatabaseService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_or_create_user(self, slack_user_id: str) -> User:
+    def get_or_create_user(self, slack_user_id: str, user_name: str = None) -> User:
         user = self.db.query(User).filter(User.slack_user_id == slack_user_id).first()
         if not user:
-            user = User(slack_user_id=slack_user_id)
+            user = User(slack_user_id=slack_user_id, user_name=user_name)
             self.db.add(user)
             self.db.commit()
             self.db.refresh(user)
         return user
 
-    def create_paraphrase(
+    def create_or_update_paraphrase(
         self,
         user_id: int,
         original_text: str,
         paraphrased_text: str,
         tone: Optional[str] = None
     ) -> Paraphrase:
-        paraphrase = Paraphrase(
-            user_id=user_id,
-            original_text=original_text,
-            paraphrased_text=paraphrased_text,
-            tone=tone
-        )
-        self.db.add(paraphrase)
+        paraphrase = self.db.query(Paraphrase).filter(Paraphrase.user_id == user_id).order_by(Paraphrase.created_at.desc()).first()
+        if not paraphrase:
+            paraphrase = Paraphrase(
+                user_id=user_id,
+                original_text=original_text,
+                paraphrased_text=paraphrased_text,
+                tone=tone
+            )
+            self.db.add(paraphrase)
+        else:
+            paraphrase.original_text = original_text
+            paraphrase.paraphrased_text = paraphrased_text
+            paraphrase.tone = tone
         self.db.commit()
         self.db.refresh(paraphrase)
         return paraphrase

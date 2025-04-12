@@ -20,6 +20,7 @@ async def process_paraphrase_task(
     text_to_rephrase: str,
     tone: str,
     user_id: str,
+    user_name: str,
     response_url: str,
     db_session: Session
 ):
@@ -41,8 +42,8 @@ async def process_paraphrase_task(
         
         # Store in the database
         db_service = DatabaseService(db)
-        user = db_service.get_or_create_user(user_id)
-        db_service.create_paraphrase(
+        user = db_service.get_or_create_user(user_id, user_name)
+        db_service.create_or_update_paraphrase(
             user_id=user.id,
             original_text=text_to_rephrase,
             paraphrased_text=paraphrased_text,
@@ -66,6 +67,7 @@ async def process_paraphrase_task(
 async def process_rewrite_action_task(
     original_text: str,
     user_id: str,
+    user_name: str,
     response_url: str,
     db_session: Session,
     tone: str | None = None
@@ -88,8 +90,8 @@ async def process_rewrite_action_task(
         
         # Store new paraphrase in database
         db_service = DatabaseService(db)
-        user = db_service.get_or_create_user(user_id)
-        db_service.create_paraphrase(
+        user = db_service.get_or_create_user(user_id, user_name)
+        db_service.create_or_update_paraphrase(
             user_id=user.id,
             original_text=original_text,
             paraphrased_text=new_paraphrased_text,
@@ -128,6 +130,7 @@ async def rewrite(
         form_data = await request.form()
         text = form_data.get("text")
         user_id = form_data.get("user_id")
+        user_name = form_data.get("user_name")
         response_url = form_data.get("response_url")
         
         # Validate request data
@@ -155,6 +158,7 @@ async def rewrite(
             text_to_rephrase=text_to_rephrase,
             tone=tone, 
             user_id=user_id,
+            user_name=user_name,
             response_url=response_url,
             db_session=db
         )
@@ -187,6 +191,7 @@ async def rewrite_action(
             
         payload_data = json.loads(payload)
         user_id = payload_data["user"]["id"]
+        user_name = payload_data["user"]["name"]
         response_url = payload_data["response_url"]
         action_id = payload_data["actions"][0]["action_id"]
     
@@ -200,7 +205,7 @@ async def rewrite_action(
             
             # Get the latest paraphrase for this user
             db_service = DatabaseService(db)
-            user = db_service.get_or_create_user(user_id)
+            user = db_service.get_or_create_user(user_id, user_name)
             latest_paraphrases = db_service.get_user_paraphrases(user.id, limit=1)
             
             if not latest_paraphrases:
@@ -210,7 +215,6 @@ async def rewrite_action(
             original_text, _ = get_latest_paraphrase(latest_paraphrases)
             
             # Get tone from input if provided
-            logger.info(f"Payload data: {payload_data}")
             tone = None
             if "state" in payload_data and "values" in payload_data["state"]:
                 tone_block = payload_data["state"]["values"].get("tone_input_block", {})
@@ -224,6 +228,7 @@ async def rewrite_action(
                 process_rewrite_action_task,
                 original_text=original_text,
                 user_id=user_id,
+                user_name=user_name,
                 response_url=response_url,
                 db_session=db,
                 tone=tone
@@ -236,7 +241,7 @@ async def rewrite_action(
             logger.info("Received copy_button action")
             # Get the latest paraphrase for this user
             db_service = DatabaseService(db)
-            user = db_service.get_or_create_user(user_id)
+            user = db_service.get_or_create_user(user_id, user_name)
             latest_paraphrases = db_service.get_user_paraphrases(user.id, limit=1)
             
             if not latest_paraphrases:
