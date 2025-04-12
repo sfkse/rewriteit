@@ -26,7 +26,11 @@ services:
       - API_BASE_URL=${API_BASE_URL}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-k", "-f", "https://localhost:${API_PORT}/docs"]
+      test:
+        [
+          "CMD-SHELL",
+          'if [ "$USE_SSL" = "true" ]; then curl -k -f https://localhost:${API_PORT}/docs; else curl -f http://localhost:${API_PORT}/docs; fi',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

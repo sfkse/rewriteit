@@ -181,7 +181,6 @@ async def rewrite_action(
     try:
         form_data = await request.form()
         payload = form_data.get("payload")
-        logger.info(f"Form data from rewrite-action: {form_data}")
         if not payload:
             logger.error("No payload found in form data")
             return get_error_layout("Missing payload")
