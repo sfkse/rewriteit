@@ -9,11 +9,17 @@ class DatabaseService:
     def get_or_create_user(self, slack_user_id: str, user_name: str = None) -> User:
         user = self.db.query(User).filter(User.slack_user_id == slack_user_id).first()
         if not user:
-            user = User(slack_user_id=slack_user_id, user_name=user_name)
+            user = User(slack_user_id=slack_user_id, user_name=user_name, credits_assigned=25)
             self.db.add(user)
             self.db.commit()
             self.db.refresh(user)
         return user
+
+    def update_user_credits(self, user_id: int):
+        user = self.db.query(User).filter(User.id == user_id).first()
+        user.credits_used += 1
+        self.db.commit()
+        self.db.refresh(user)
 
     def create_or_update_paraphrase(
         self,

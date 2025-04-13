@@ -119,7 +119,15 @@ The application will be available at `https://localhost:8443`.
    pip install -r requirements.txt
    ```
 
-2. Run the application locally:
+2. Generate SSL certificates and place them in the `certs/` directory:
+
+   ```bash
+   mkdir certs
+   openssl req -x509 -newkey rsa:4096 -nodes -out certs/cert.pem -keyout certs/key.pem -days 365
+   ```
+
+3. Run the application locally:
+
    ```bash
    uvicorn src.main:app --host 0.0.0.0 --port 8443 --ssl-keyfile ./certs/key.pem --ssl-certfile ./certs/cert.pem
    ```

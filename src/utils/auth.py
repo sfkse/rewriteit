@@ -1,5 +1,7 @@
 from fastapi import Request
 from src.config import settings
+from src.models.database import User
+
 import hmac
 import hashlib
 import time
@@ -26,3 +28,8 @@ async def verify_slack_request(request: Request):
     
     # Compare the computed signature with the signature from the request headers
     return computed_signature == slack_signature
+
+def check_user_credits(user: User):
+    if not user:
+        return False
+    return user.credits_assigned > user.credits_used

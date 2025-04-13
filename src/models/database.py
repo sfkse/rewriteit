@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Integer
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from src.database import Base
@@ -12,6 +12,9 @@ class User(Base):
     slack_user_id = Column(String, unique=True, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     user_name = Column(String, nullable=False)
+    credits_assigned = Column(Integer, default=0)
+    credits_used = Column(Integer, default=0)
+    plan = Column(String, default="free")
     paraphrases = relationship("Paraphrase", back_populates="user")
 
 class Paraphrase(Base):
