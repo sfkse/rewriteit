@@ -24,7 +24,7 @@ services:
       - OPENROUTER_BASE_URL=${OPENROUTER_BASE_URL}
       - DATABASE_URL=${DATABASE_URL}
       - API_BASE_URL=${API_BASE_URL}
-    restart: unless-stopped
+    restart: always
     healthcheck:
       test:
         [
@@ -59,4 +59,3 @@ services:
 
 volumes:
   slackparaphrase_db_data:
-
