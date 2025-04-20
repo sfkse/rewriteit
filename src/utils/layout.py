@@ -14,7 +14,7 @@ def get_rephrase_response_layout(text: str, paraphrased_text: str, user_id: str)
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": "*Improved Text:*\n" + paraphrased_text
+                    "text": "*Suggested Text:*\n" + paraphrased_text
                 },
             },
             {

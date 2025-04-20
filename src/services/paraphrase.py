@@ -3,7 +3,6 @@ import logging
 from typing import Optional
 from src.models.openrouter import OpenRouterResponse
 from src.config import settings
-from fastapi import HTTPException
 
 logger = logging.getLogger(__name__)
 
