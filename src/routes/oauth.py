@@ -26,7 +26,7 @@ async def slack_oauth(code: str):
                     "code": code,
                     "client_id": settings.slack_client_id,
                     "client_secret": settings.slack_client_secret,
-                    "redirect_uri": settings.api_base_url + "/signin-oidc",
+                    "redirect_uri": "https://rewordit.pro",
                 }
             )
             
