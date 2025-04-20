@@ -17,7 +17,7 @@ async def slack_oauth(code: str):
             headers = {
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
-            
+            logger.info(f"Redirect URI: {settings.api_base_url}/signin-oidc")
             # Using data parameter with headers for x-www-form-urlencoded
             response = await client.post(
                 settings.slack_api_base_url + "/oauth.v2.access",
@@ -26,7 +26,7 @@ async def slack_oauth(code: str):
                     "code": code,
                     "client_id": settings.slack_client_id,
                     "client_secret": settings.slack_client_secret,
-                    "redirect_uri": "https://rewordit.pro",
+                    "redirect_uri": settings.api_base_url + "/signin-oidc",
                 }
             )
             
