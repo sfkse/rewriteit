@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, RedirectResponse
+from fastapi import APIRouter, HTTPException
+from starlette.responses import RedirectResponse
 import httpx
 import logging
 from src.config import settings
@@ -10,7 +11,6 @@ router = APIRouter()
 @router.get("/signin-oidc")
 async def slack_oauth(code: str):
     """Handle the OAuth callback from Slack"""
-    logger.info(f"Received code: {code[:10]}...")  # Log only first 10 chars for security
     
     async with httpx.AsyncClient() as client:
         try:
