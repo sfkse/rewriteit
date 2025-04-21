@@ -32,10 +32,7 @@ async def slack_oauth(code: str):
                 }
             )
             
-            data = response.json()
-            logger.info(f"Slack API response status: {response.status_code}")
-            logger.info(f"Slack API response: {data}")
-            
+            data = response.json()            
             if not response.is_success or not data.get("ok"):
                 error_msg = data.get("error", "Failed to exchange code for token")
                 logger.error(f"Slack API error: {error_msg}")
