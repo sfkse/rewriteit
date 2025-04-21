@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, RedirectResponse
 import httpx
 import logging
 from src.config import settings
@@ -42,11 +42,12 @@ async def slack_oauth(code: str):
                     detail=error_msg
                 )
             
-            return SlackOAuthResponse(
+            """ return SlackOAuthResponse(
                 ok=True,
                 access_token=data.get("access_token"),
                 bot_token=data.get("access_token")
-            )
+            ) """
+            return RedirectResponse(url="https://rewordit.pro/success")
         except Exception as e:
             logger.error(f"Error during Slack OAuth: {str(e)}")
             raise HTTPException(
