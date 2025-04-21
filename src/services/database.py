@@ -1,17 +1,30 @@
 from sqlalchemy.orm import Session
 from src.models.database import User, Paraphrase
 from src.utils.constants import FREE_CREDITS
-from typing import Optional
+from typing import Optional, Dict, Any
 
 class DatabaseService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_or_create_user(self, slack_user_id: str, user_name: str = None) -> User:
+    def get_or_create_user(self, slack_user_id: str, user_name: str = None, user_info: Dict[str, Any] = None) -> User:
         user = self.db.query(User).filter(User.slack_user_id == slack_user_id).first()
         if not user:
-            user = User(slack_user_id=slack_user_id, user_name=user_name, credits_assigned=FREE_CREDITS)
+            user = User(
+                slack_user_id=slack_user_id,
+                user_name=user_name,
+                credits_assigned=FREE_CREDITS,
+                user_info=user_info
+            )
             self.db.add(user)
+            self.db.commit()
+            self.db.refresh(user)
+        else:
+            # Update existing user's info
+            if user_name:
+                user.user_name = user_name
+            if user_info:
+                user.user_info = user_info
             self.db.commit()
             self.db.refresh(user)
         return user

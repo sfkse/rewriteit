@@ -59,8 +59,12 @@ async def slack_oauth(code: str):
             database_service = DatabaseService(db)
 
             try:
-                user = database_service.get_or_create_user(data['authed_user']['id'], user_info['user']['name'])
-                logger.info(f"User created: {user.slack_user_id}")
+                user = database_service.get_or_create_user(
+                    slack_user_id=data['authed_user']['id'],
+                    user_name=user_info['user']['name'],
+                    user_info=user_info  # Store the complete user_info JSON
+                )
+                logger.info(f"User created/updated: {user.slack_user_id}")
                 # Redirect to success page
                 return RedirectResponse(url=f"{settings.client_base_url}/success")
                 

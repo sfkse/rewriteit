@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Integer
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Integer, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from src.database import Base
@@ -15,6 +15,7 @@ class User(Base):
     credits_assigned = Column(Integer, default=0)
     credits_used = Column(Integer, default=0)
     plan = Column(String, default="free")
+    user_info = Column(JSON, nullable=True)
     paraphrases = relationship("Paraphrase", back_populates="user")
 
 class Paraphrase(Base):
