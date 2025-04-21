@@ -16,7 +16,10 @@ class Settings(BaseSettings):
     ssl_cert_path: str
     ssl_key_path: str 
     use_ssl: bool
-    
+    logtail_source_token: str
+    logtail_host: str
+    env: str
+
     class Config:       
         env_file = ".env"
 

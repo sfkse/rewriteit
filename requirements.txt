@@ -9,3 +9,4 @@ black==24.1.1
 sqlalchemy==2.0.25
 psycopg2-binary==2.9.9
 yoyo-migrations==8.2.0
+logtail-python==0.3.3

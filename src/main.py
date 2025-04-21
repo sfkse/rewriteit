@@ -5,21 +5,31 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 from yoyo import read_migrations, get_backend
+from logtail import LogtailHandler
+from src.config import settings
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
-# Create a rotating file handler
-file_handler = RotatingFileHandler(
-    'app.log',
-    maxBytes=1024 * 1024,  # 1MB
-    backupCount=5
-)
-file_handler.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
-logger.addHandler(file_handler)
+logger.handlers = []
+
+if os.getenv("ENV", "dev") == "prod":
+    logtail_handler = LogtailHandler(
+        source_token=settings.logtail_source_token,
+        host=settings.logtail_host
+    )
+    logger.addHandler(logtail_handler)
+else:
+    file_handler = RotatingFileHandler(
+        'app.log',
+        maxBytes=1024 * 1024,  # 1MB
+        backupCount=5
+    )
+    file_handler.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
 # Get database URL from environment with correct host for Docker
 database_url = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@slackparaphrase-db:5433/slackparaphrase")
