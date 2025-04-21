@@ -3,7 +3,9 @@ from starlette.responses import RedirectResponse
 import httpx
 import logging
 from src.config import settings
-from src.models import SlackOAuthResponse
+from src.database import SessionLocal
+from sqlalchemy.exc import IntegrityError
+from src.services.database import DatabaseService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -42,15 +44,35 @@ async def slack_oauth(code: str):
                     detail=error_msg
                 )
             
-            """ return SlackOAuthResponse(
-                ok=True,
-                access_token=data.get("access_token"),
-                bot_token=data.get("access_token")
-            ) """
-            return RedirectResponse(url="https://rewordit.pro/success")
+            # Get user information from Slack
+            user_info_response = await client.get(
+                "https://slack.com/api/users.info",
+                headers={"Authorization": f"Bearer {data['authed_user']['access_token']}"},
+                params={"user": data['authed_user']['id']}
+            )
+            
+            user_info = user_info_response.json()
+            if not user_info.get("ok"):
+                logger.error(f"Failed to get user info: {user_info.get('error')}")
+                raise HTTPException(status_code=400, detail="Failed to get user information")
+            
+            # Create or update user in database
+            db = SessionLocal()
+            database_service = DatabaseService(db)
+
+            try:
+                user = database_service.get_or_create_user(data['authed_user']['id'], user_info['user']['name'])
+                logger.info(f"User created: {user.slack_user_id}")
+                # Redirect to success page
+                return RedirectResponse(url=f"{settings.api_base_url}/success")
+                
+            except IntegrityError as e:
+                db.rollback()
+                logger.error(f"Database error: {str(e)}")
+                raise HTTPException(status_code=500, detail="Database error occurred")
+            finally:
+                db.close()
+            
         except Exception as e:
-            logger.error(f"Error during Slack OAuth: {str(e)}")
-            raise HTTPException(
-                status_code=500,
-                detail=f"Internal server error during OAuth: {str(e)}"
-            ) 
+            logger.error(f"Error in Slack OAuth: {str(e)}")
+            raise HTTPException(status_code=500, detail=str(e)) 

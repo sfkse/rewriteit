@@ -27,7 +27,6 @@ class ParaphraseService:
                 
                 if response.is_success:
                     data = OpenRouterResponse(**response.json())
-                    logger.info(f"Paraphrased text: {data}")
                     return data.choices[0].message.content
                 else:
                     logger.error(f"OpenRouter API error: {response.text}")

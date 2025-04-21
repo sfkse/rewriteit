@@ -1,5 +1,6 @@
 from sqlalchemy.orm import Session
 from src.models.database import User, Paraphrase
+from src.utils.constants import FREE_CREDITS
 from typing import Optional
 
 class DatabaseService:
@@ -9,7 +10,7 @@ class DatabaseService:
     def get_or_create_user(self, slack_user_id: str, user_name: str = None) -> User:
         user = self.db.query(User).filter(User.slack_user_id == slack_user_id).first()
         if not user:
-            user = User(slack_user_id=slack_user_id, user_name=user_name, credits_assigned=25)
+            user = User(slack_user_id=slack_user_id, user_name=user_name, credits_assigned=FREE_CREDITS)
             self.db.add(user)
             self.db.commit()
             self.db.refresh(user)

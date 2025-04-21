@@ -1,0 +1,1 @@
+FREE_CREDITS = 50
