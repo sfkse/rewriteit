@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     openrouter_base_url: str
     database_url: str
     api_base_url: str
+    client_base_url: str
     slack_bot_token: str
     api_port: str 
     db_port: str 

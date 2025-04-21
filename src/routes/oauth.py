@@ -64,7 +64,7 @@ async def slack_oauth(code: str):
                 user = database_service.get_or_create_user(data['authed_user']['id'], user_info['user']['name'])
                 logger.info(f"User created: {user.slack_user_id}")
                 # Redirect to success page
-                return RedirectResponse(url=f"{settings.api_base_url}/success")
+                return RedirectResponse(url=f"{settings.client_base_url}/success")
                 
             except IntegrityError as e:
                 db.rollback()
