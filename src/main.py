@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.routes import rephrase, oauth
+from src.routes import rephrase, oauth, subscription
 import os
 import logging
 from logging.handlers import RotatingFileHandler
@@ -53,6 +53,7 @@ app.add_middleware(
 # Include routers
 app.include_router(rephrase.router)
 app.include_router(oauth.router)
+app.include_router(subscription.router)
 
 @app.get("/health")
 async def health_check():

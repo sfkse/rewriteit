@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     logtail_source_token: str
     logtail_host: str
     env: str
+    stripe_secret_key: str
+    stripe_webhook_secret: str
 
     class Config:       
         env_file = ".env"

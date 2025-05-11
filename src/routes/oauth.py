@@ -16,10 +16,10 @@ async def slack_oauth(code: str):
     
     async with httpx.AsyncClient() as client:
         try:
+            logger.info(f"Redirect URI: {settings.api_base_url}/signin-oidc")
             headers = {
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
-            logger.info(f"Redirect URI: {settings.api_base_url}/signin-oidc")
             # Using data parameter with headers for x-www-form-urlencoded
             response = await client.post(
                 settings.slack_api_base_url + "/oauth.v2.access",
@@ -49,7 +49,6 @@ async def slack_oauth(code: str):
             )
             
             user_info = user_info_response.json()
-            logger.info(f"User info: {user_info}")
             if not user_info.get("ok"):
                 logger.error(f"Failed to get user info: {user_info.get('error')}")
                 raise HTTPException(status_code=400, detail="Failed to get user information")
