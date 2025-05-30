@@ -7,26 +7,28 @@ class DatabaseService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_or_create_user(self, slack_user_id: str, user_name: str = None, user_info: Dict[str, Any] = None) -> User:
-        user = self.db.query(User).filter(User.slack_user_id == slack_user_id).first()
+    def get_or_create_user(self, email: str) -> User:
+        user = self.db.query(User).filter(User.email == email).first()
         if not user:
-            user = User(
-                slack_user_id=slack_user_id,
-                user_name=user_name,
-                credits_assigned=FREE_CREDITS,
-                user_info=user_info
-            )
+            user = User(email=email)
             self.db.add(user)
             self.db.commit()
             self.db.refresh(user)
         else:
             # Update existing user's info
-            if user_name:
-                user.user_name = user_name
-            if user_info:
-                user.user_info = user_info
+            # if user_name:
+            #     user.user_name = user_name
+            # if user_info:
+            #     user.user_info = user_info
             self.db.commit()
             self.db.refresh(user)
+        return user
+
+    def update_user(self, user_id: int, user_info: Dict[str, Any]):
+        user = self.db.query(User).filter(User.id == user_id).first()
+        user.user_info = user_info
+        self.db.commit()
+        self.db.refresh(user)
         return user
 
     def update_user_credits(self, user_id: int):

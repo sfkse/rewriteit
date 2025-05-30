@@ -6,6 +6,8 @@ Stripe Sample.
 Python 3.6 or newer required.
 """
 from fastapi import APIRouter, HTTPException, Request
+from src.database import SessionLocal
+from src.services.database import DatabaseService
 import stripe
 from src.config import settings
 import logging
@@ -103,10 +105,14 @@ async def webhook_received(request: Request):
 
         event_type = event['type']
         data = event['data']['object']
-
         # Handle different event types
         if event_type == 'checkout.session.completed':
             logger.info(f"Payment succeeded for session {data['id']}")
+            customer = data['customer_details']['email']
+            # Create user in database
+            db = SessionLocal()
+            database_service = DatabaseService(db)
+            user = database_service.get_or_create_user(customer)
             # Here you can add logic to update user's subscription status in your database
         elif event_type == 'customer.subscription.created':
             logger.info(f"Subscription created: {data['id']}")
@@ -114,7 +120,6 @@ async def webhook_received(request: Request):
             logger.info(f"Subscription updated: {data['id']}")
         elif event_type == 'customer.subscription.deleted':
             logger.info(f"Subscription canceled: {data['id']}")
-            # Here you can add logic to update user's subscription status in your database
 
         return {"status": "success"}
     except Exception as e:
